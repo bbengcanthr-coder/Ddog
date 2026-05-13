@@ -2,469 +2,414 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The Weight We Carry</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>The Light We Carry</title>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500&display=swap" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;600&display=swap');
-
-        * {
+        body, html {
             margin: 0;
             padding: 0;
-            box-sizing: border-box;
-        }
-
-        body, html {
             width: 100%;
             height: 100%;
-            background-color: #030303;
-            color: #ffffff;
-            font-family: 'Prompt', sans-serif;
+            background-color: #000;
             overflow: hidden;
+            font-family: 'Prompt', sans-serif;
+            color: #fff;
             user-select: none;
-            transition: background-color 3s ease;
         }
-
         #gameCanvas {
-            position: absolute;
-            top: 0;
-            left: 0;
+            display: block;
             width: 100%;
             height: 100%;
-            z-index: 1;
-            pointer-events: none;
         }
-
         #ui-layer {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            z-index: 2;
+            pointer-events: none;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
             text-align: center;
-            padding: 20px;
+            z-index: 10;
         }
-
-        .text-container {
-            max-width: 800px;
-            opacity: 0;
-            transform: translateY(20px);
-            transition: opacity 2s ease, transform 2s ease;
-        }
-
-        .text-container.visible {
-            opacity: 1;
-            transform: translateY(0);
-        }
-
-        h1 {
-            font-size: 2rem;
-            font-weight: 400;
-            line-height: 1.6;
-            letter-spacing: 1px;
-            margin-bottom: 30px;
-            text-shadow: 0 0 10px rgba(0,0,0,0.8);
-        }
-
-        .sub-text {
-            font-size: 1.2rem;
+        .story-text {
+            font-size: 24px;
             font-weight: 300;
-            color: #aaaaaa;
-            margin-top: 20px;
-        }
-
-        .harsh-word {
+            opacity: 0;
+            transition: opacity 2s ease-in-out;
+            max-width: 80%;
+            line-height: 1.6;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
             position: absolute;
-            color: rgba(255, 50, 50, 0.7);
-            font-weight: 600;
-            font-size: 1.5rem;
-            pointer-events: none;
-            opacity: 0;
-            transition: opacity 0.5s ease;
-            text-shadow: 0 0 5px rgba(255, 0, 0, 0.5);
         }
-
-        .btn {
-            margin-top: 40px;
-            padding: 12px 30px;
-            border: 1px solid #ffffff;
-            background: transparent;
-            color: #ffffff;
-            font-family: 'Prompt', sans-serif;
-            font-size: 1rem;
-            cursor: pointer;
-            letter-spacing: 2px;
-            transition: all 0.3s ease;
-            opacity: 0;
-            pointer-events: none;
-        }
-
-        .btn.visible {
-            opacity: 1;
+        #start-screen {
             pointer-events: auto;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            transition: opacity 1s;
         }
-
+        .btn {
+            padding: 15px 40px;
+            border: 1px solid #fff;
+            background: transparent;
+            color: #fff;
+            font-family: 'Prompt', sans-serif;
+            font-size: 18px;
+            cursor: pointer;
+            transition: all 0.3s;
+            letter-spacing: 2px;
+        }
         .btn:hover {
-            background: #ffffff;
-            color: #000000;
-            box-shadow: 0 0 15px rgba(255,255,255,0.5);
+            background: #fff;
+            color: #000;
         }
-
-        /* Ending Transition */
-        body.light-ending {
-            background-color: #ffffff;
-            color: #000000;
-        }
-
-        body.light-ending h1 {
-            text-shadow: none;
-            font-weight: 600;
-            color: #222222;
-        }
-
-        body.light-ending .btn {
-            border-color: #000000;
-            color: #000000;
-        }
-
-        body.light-ending .btn:hover {
-            background: #000000;
-            color: #ffffff;
+        #white-fade {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #fff;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 5s ease-in-out;
+            z-index: 5;
         }
     </style>
 </head>
 <body>
 
     <canvas id="gameCanvas"></canvas>
+    
+    <div id="white-fade"></div>
 
     <div id="ui-layer">
-        <div class="text-container" id="story-box">
-            <h1 id="main-text"></h1>
-            <p class="sub-text" id="instruction-text"></p>
-            <button class="btn" id="action-btn">เริ่มต้นการเดินทาง</button>
+        <div id="start-screen">
+            <h1 style="font-weight: 400; letter-spacing: 2px; margin-bottom: 40px;">THE WEIGHT WE CARRY</h1>
+            <p style="font-weight: 300; margin-bottom: 40px; color: #aaa;">ใส่หูฟังเพื่อประสบการณ์ที่ดีที่สุด<br>ใช้เมาส์หรือนิ้วสัมผัสเพื่อนำทางแสงสว่าง</p>
+            <button class="btn" id="start-btn">เริ่มการเดินทาง</button>
         </div>
+        <div id="text-1" class="story-text">ท่ามกลางความมืดมิด... ฉันแบกรับบางสิ่งไว้มากมาย</div>
+        <div id="text-2" class="story-text">ความคาดหวังจากผู้คน ดึงรั้งและผลักดันฉันในเวลาเดียวกัน</div>
+        <div id="text-3" class="story-text">ฉันอยากให้เราทุกคนก้าวไปให้ถึงปลายทาง... โดยไม่ทิ้งใครไว้เบื้องหลัง</div>
+        <div id="text-4" class="story-text">แต่เส้นทางนี้กลับเต็มไปด้วยพายุ... คำวิจารณ์ และการตัดพ้อ</div>
+        <div id="text-5" class="story-text">มีน้ำตาและความเจ็บปวด เมื่อพวกเขาเริ่มสิ้นหวังในตัวฉัน</div>
+        <div id="text-6" class="story-text">แต่ถึงอย่างนั้น... ฉันก็จะไม่ยอมปล่อยมือจากใคร</div>
+        <div id="text-7" class="story-text">เพราะฉันรู้ว่า... เราจะผ่านความมืดมิดนี้ไปด้วยกัน</div>
+        <div id="text-8" class="story-text" style="color: #000; text-shadow: none; font-weight: 400; font-size: 28px;">ในที่สุด... เราก็พบแสงสว่าง</div>
     </div>
 
-    <script>
-        // --- Web Audio API Setup (Synthesized Sounds) ---
-        let audioCtx;
-        const masterGain = 0.3;
+<script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const startScreen = document.getElementById('start-screen');
+    const startBtn = document.getElementById('start-btn');
+    const whiteFade = document.getElementById('white-fade');
 
-        function initAudio() {
-            if (!audioCtx) {
-                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            }
-            if (audioCtx.state === 'suspended') {
-                audioCtx.resume();
-            }
+    let width, height;
+    let audioCtx;
+    let masterGain;
+    let bgmOsc;
+
+    let isPlaying = false;
+    let phase = 0;
+    let phaseTimer = 0;
+    let shakeTime = 0;
+    let bgColor = 0; // Black
+
+    // Game Entities
+    let player = { x: 0, y: 0, radius: 15, targetX: 0, targetY: 0 };
+    let followers = [];
+    let enemies = [];
+    let particles = [];
+    
+    const wordsOfDoubt = ["ทำไมทำไม่ได้?", "ภาระ", "ผิดหวัง", "ไม่รอดหรอก", "อ่อนแอ", "ยอมแพ้เถอะ", "ไร้ประโยชน์"];
+
+    function resize() {
+        width = window.innerWidth;
+        height = window.innerHeight;
+        canvas.width = width;
+        canvas.height = height;
+        if(!isPlaying) {
+            player.x = player.targetX = width / 2;
+            player.y = player.targetY = height / 2;
+        }
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    // Input Handling
+    function updateTarget(x, y) {
+        player.targetX = x;
+        player.targetY = y;
+    }
+    window.addEventListener('mousemove', (e) => updateTarget(e.clientX, e.clientY));
+    window.addEventListener('touchmove', (e) => updateTarget(e.touches[0].clientX, e.touches[0].clientY));
+
+    // Audio System (Procedural Web Audio API)
+    function initAudio() {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        audioCtx = new AudioContext();
+        masterGain = audioCtx.createGain();
+        masterGain.connect(audioCtx.destination);
+        masterGain.gain.value = 0.5;
+
+        // Ambient Drone
+        bgmOsc = audioCtx.createOscillator();
+        bgmOsc.type = 'sine';
+        bgmOsc.frequency.value = 60; // Deep sound
+        
+        let lfo = audioCtx.createOscillator();
+        lfo.type = 'sine';
+        lfo.frequency.value = 0.2;
+        let lfoGain = audioCtx.createGain();
+        lfoGain.gain.value = 10;
+        lfo.connect(lfoGain);
+        lfoGain.connect(bgmOsc.frequency);
+        
+        bgmOsc.connect(masterGain);
+        bgmOsc.start();
+        lfo.start();
+    }
+
+    function playTone(freq, type, duration, vol, isHarmonic) {
+        if(!audioCtx) return;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        
+        if (!isHarmonic) {
+            // Add dissonance for hits
+            osc.frequency.linearRampToValueAtTime(freq - 50, audioCtx.currentTime + duration);
         }
 
-        function playDroneSound(frequency, duration, type = 'sine', volume = 0.5) {
-            if (!audioCtx) return;
-            const osc = audioCtx.createOscillator();
-            const gainNode = audioCtx.createGain();
-            
-            osc.type = type;
-            osc.frequency.setValueAtTime(frequency, audioCtx.currentTime);
-            
-            gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
-            gainNode.gain.linearRampToValueAtTime(volume * masterGain, audioCtx.currentTime + 1);
-            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
-            
-            osc.connect(gainNode);
-            gainNode.connect(audioCtx.destination);
-            
-            osc.start();
-            osc.stop(audioCtx.currentTime + duration);
-        }
+        osc.connect(gain);
+        gain.connect(masterGain);
+        osc.start();
+        
+        gain.gain.setValueAtTime(0, audioCtx.currentTime);
+        gain.gain.linearRampToValueAtTime(vol, audioCtx.currentTime + 0.1);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+        osc.stop(audioCtx.currentTime + duration);
+    }
 
-        function playNoise(duration) {
-            if (!audioCtx) return;
-            const bufferSize = audioCtx.sampleRate * duration;
-            const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
-            const data = buffer.getChannelData(0);
-            for (let i = 0; i < bufferSize; i++) {
-                data[i] = Math.random() * 2 - 1;
-            }
-            
-            const noise = audioCtx.createBufferSource();
-            noise.buffer = buffer;
-            
-            const filter = audioCtx.createBiquadFilter();
-            filter.type = 'lowpass';
-            filter.frequency.value = 400;
-
-            const gainNode = audioCtx.createGain();
-            gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
-            gainNode.gain.linearRampToValueAtTime(0.1, audioCtx.currentTime + 0.5);
-            gainNode.gain.linearRampToValueAtTime(0, audioCtx.currentTime + duration);
-
-            noise.connect(filter);
-            filter.connect(gainNode);
-            gainNode.connect(audioCtx.destination);
-            
-            noise.start();
-        }
-
-        function playUpliftingChord() {
-            if (!audioCtx) return;
-            const frequencies = [261.63, 329.63, 392.00, 523.25]; // C Major Chord
-            frequencies.forEach((freq, index) => {
-                setTimeout(() => {
-                    playDroneSound(freq, 5, 'triangle', 0.2);
-                }, index * 200);
+    // Mechanics
+    function spawnFollowers() {
+        for(let i=0; i<8; i++) {
+            followers.push({
+                x: player.x + (Math.random() - 0.5) * 100,
+                y: player.y + (Math.random() - 0.5) * 100,
+                radius: 5,
+                health: 1.0, // 1.0 = bright, 0.0 = dim
+                vx: 0, vy: 0
             });
         }
+    }
 
-        // --- Canvas Particle System ---
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
-        let width, height;
-        let particles = [];
-        let sceneState = 0;
-        let targetX = 0;
-        let targetY = 0;
+    function spawnEnemy() {
+        if (phase < 3 || phase > 6) return;
+        let side = Math.random();
+        let ex, ey, vx, vy;
+        if(side < 0.25) { ex = Math.random() * width; ey = -50; vx = (Math.random()-0.5)*2; vy = Math.random()*3+1; }
+        else if(side < 0.5) { ex = Math.random() * width; ey = height+50; vx = (Math.random()-0.5)*2; vy = -(Math.random()*3+1); }
+        else if(side < 0.75) { ex = -50; ey = Math.random() * height; vx = Math.random()*3+1; vy = (Math.random()-0.5)*2; }
+        else { ex = width+50; ey = Math.random() * height; vx = -(Math.random()*3+1); vy = (Math.random()-0.5)*2; }
 
-        function resize() {
-            width = canvas.width = window.innerWidth;
-            height = canvas.height = window.innerHeight;
-            targetX = width / 2;
-            targetY = height / 2;
+        enemies.push({
+            x: ex, y: ey, vx: vx, vy: vy,
+            word: wordsOfDoubt[Math.floor(Math.random() * wordsOfDoubt.length)],
+            active: true
+        });
+    }
+
+    function showText(id) {
+        document.querySelectorAll('.story-text').forEach(el => el.style.opacity = 0);
+        const el = document.getElementById(id);
+        if(el) el.style.opacity = 1;
+    }
+
+    // Main Loop
+    let lastTime = 0;
+    function loop(timestamp) {
+        const dt = (timestamp - lastTime) / 1000 || 0;
+        lastTime = timestamp;
+
+        if (isPlaying) {
+            phaseTimer += dt;
+            updateLogic(dt);
+            draw();
         }
-        window.addEventListener('resize', resize);
-        resize();
+        requestAnimationFrame(loop);
+    }
 
-        class Particle {
-            constructor() {
-                this.reset();
-            }
-            reset() {
-                this.x = Math.random() * width;
-                this.y = Math.random() * height;
-                this.size = Math.random() * 2 + 0.5;
-                this.speedX = Math.random() * 1 - 0.5;
-                this.speedY = Math.random() * 1 - 0.5;
-                this.color = 'rgba(255, 255, 255, 0.5)';
-                this.life = Math.random();
-            }
-            update(state) {
-                if (state === 1) {
-                    // Heavy burden: Particles move slowly downwards
-                    this.y += 0.5;
-                    this.speedX *= 0.99;
-                    if (this.y > height) this.y = 0;
-                } else if (state === 2) {
-                    // Chaos/Harsh words: Fast, erratic movement
-                    this.x += (Math.random() - 0.5) * 5;
-                    this.y += (Math.random() - 0.5) * 5;
-                } else if (state === 3) {
-                    // Gathering/Holding on: Particles pull towards center
-                    const dx = targetX - this.x;
-                    const dy = targetY - this.y;
-                    this.x += dx * 0.01;
-                    this.y += dy * 0.01;
-                } else if (state === 4) {
-                    // Light expanding: Particles move outwards and fade
-                    const dx = this.x - targetX;
-                    const dy = this.y - targetY;
-                    this.x += dx * 0.02;
-                    this.y += dy * 0.02;
-                    this.size += 0.05;
-                } else {
-                    this.x += this.speedX;
-                    this.y += this.speedY;
-                    if (this.x < 0 || this.x > width) this.speedX *= -1;
-                    if (this.y < 0 || this.y > height) this.speedY *= -1;
-                }
-            }
-            draw(state) {
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-                if (state === 2) {
-                    ctx.fillStyle = Math.random() > 0.9 ? 'rgba(255, 50, 50, 0.8)' : 'rgba(200, 200, 200, 0.5)';
-                } else if (state === 4) {
-                    ctx.fillStyle = 'rgba(255, 215, 0, 0.6)'; // Soft gold
-                } else {
-                    ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
-                }
-                ctx.fill();
-            }
+    function updateLogic(dt) {
+        // Screen Shake
+        let dx = 0, dy = 0;
+        if (shakeTime > 0) {
+            shakeTime -= dt;
+            dx = (Math.random() - 0.5) * 15;
+            dy = (Math.random() - 0.5) * 15;
         }
 
-        for (let i = 0; i < 150; i++) {
-            particles.push(new Particle());
-        }
+        ctx.setTransform(1, 0, 0, 1, dx, dy);
 
-        function animate() {
-            if (sceneState === 4) {
-                ctx.fillStyle = 'rgba(255, 255, 255, 0.05)';
-            } else {
-                ctx.fillStyle = 'rgba(3, 3, 3, 0.2)';
-            }
-            ctx.fillRect(0, 0, width, height);
+        // Player Movement (Lerp)
+        player.x += (player.targetX - player.x) * 3 * dt;
+        player.y += (player.targetY - player.y) * 3 * dt;
+
+        // Followers Logic
+        followers.forEach(f => {
+            // Spring physics towards player
+            let distToPlayer = Math.hypot(player.x - f.x, player.y - f.y);
+            let angle = Math.atan2(player.y - f.y, player.x - f.x);
             
-            particles.forEach(p => {
-                p.update(sceneState);
-                p.draw(sceneState);
+            // Move closer if too far
+            if (distToPlayer > 40) {
+                f.vx += Math.cos(angle) * 5 * dt;
+                f.vy += Math.sin(angle) * 5 * dt;
+            }
+            
+            // Friction
+            f.vx *= 0.95;
+            f.vy *= 0.95;
+
+            f.x += f.vx;
+            f.y += f.vy;
+
+            // Heal if close to player
+            if (distToPlayer < 50 && f.health < 1) {
+                f.health += 0.5 * dt;
+                if (f.health > 1) f.health = 1;
+            }
+        });
+
+        // Enemies Logic
+        for (let i = enemies.length - 1; i >= 0; i--) {
+            let e = enemies[i];
+            e.x += e.vx;
+            e.y += e.vy;
+
+            if (!e.active) continue;
+
+            // Hit Player
+            if (Math.hypot(player.x - e.x, player.y - e.y) < player.radius + 15) {
+                shakeTime = 0.3;
+                e.active = false;
+                playTone(150, 'sawtooth', 0.5, 0.4, false); // Discordant hit
+            }
+
+            // Hit Followers
+            followers.forEach(f => {
+                if (e.active && Math.hypot(f.x - e.x, f.y - e.y) < f.radius + 15) {
+                    f.health -= 0.5;
+                    e.active = false;
+                    playTone(300, 'square', 0.2, 0.1, false);
+                }
             });
+
+            // Remove off-screen
+            if (e.x < -100 || e.x > width + 100 || e.y < -100 || e.y > height + 100) {
+                enemies.splice(i, 1);
+            }
+        }
+
+        if (Math.random() < 0.02) spawnEnemy();
+
+        // Phase Management
+        if (phase === 0 && phaseTimer > 2) { phase = 1; showText('text-1'); }
+        if (phase === 1 && phaseTimer > 8) { phase = 2; showText('text-2'); spawnFollowers(); }
+        if (phase === 2 && phaseTimer > 16) { phase = 3; showText('text-3'); }
+        if (phase === 3 && phaseTimer > 24) { phase = 4; showText('text-4'); bgmOsc.frequency.linearRampToValueAtTime(80, audioCtx.currentTime + 2); }
+        if (phase === 4 && phaseTimer > 32) { phase = 5; showText('text-5'); }
+        if (phase === 5 && phaseTimer > 40) { phase = 6; showText('text-6'); }
+        if (phase === 6 && phaseTimer > 48) { phase = 7; showText('text-7'); bgmOsc.frequency.linearRampToValueAtTime(200, audioCtx.currentTime + 5); }
+        if (phase === 7 && phaseTimer > 56) { 
+            phase = 8; 
+            whiteFade.style.opacity = 1; 
+            document.querySelectorAll('.story-text').forEach(el => el.style.opacity = 0);
             
-            requestAnimationFrame(animate);
+            // Major chord resolution
+            setTimeout(() => {
+                showText('text-8');
+                playTone(440, 'sine', 5, 0.2, true); // A4
+                playTone(554.37, 'sine', 5, 0.2, true); // C#5
+                playTone(659.25, 'sine', 5, 0.2, true); // E5
+            }, 3000);
+            phaseTimer = -999; // End progression
         }
-        animate();
+    }
 
-        // --- Story Progression Logic ---
-        const storyBox = document.getElementById('story-box');
-        const mainText = document.getElementById('main-text');
-        const instText = document.getElementById('instruction-text');
-        const btn = document.getElementById('action-btn');
+    function draw() {
+        // Trail effect
+        ctx.fillStyle = `rgba(${bgColor}, ${bgColor}, ${bgColor}, 0.3)`;
+        ctx.fillRect(0, 0, width, height);
 
-        const storyData = [
-            {
-                text: "มีบางสิ่ง... ที่ฉันแบกรับไว้มากมาย",
-                inst: "คลิกหน้าจอเพื่อก้าวเดินต่อไป",
-                btnText: "ก้าวต่อไป",
-                sound: () => playDroneSound(65.41, 4, 'sine', 0.8), // C2 heavy
-                state: 1
-            },
-            {
-                text: "เสียงวิจารณ์ ความคาดหวัง และความผิดหวังของใครหลายคน<br>ทำไมพวกเขาถึงตัดพ้อในตัวฉัน?",
-                inst: "ความเจ็บปวดก่อตัวขึ้น...",
-                btnText: "อดทนไว้",
-                sound: () => playDroneSound(130.81, 3, 'sawtooth', 0.4), // C3 harsh
-                state: 2,
-                action: spawnHarshWords
-            },
-            {
-                text: "ฉันเจ็บปวด ฉันมีน้ำตา<br>แต่ฉันก็รู้ว่าจุดหมายปลายทางของเราคือสิ่งสำคัญ",
-                inst: "รวบรวมทุกคนเข้าด้วยกัน",
-                btnText: "จับมือไว้",
-                sound: () => playNoise(4), // Rain/Wind noise
-                state: 3
-            },
-            {
-                text: "ฉันจะไม่ทิ้งใครไว้ข้างหลัง<br>เราทุกคนจะต้องก้าวเดินไปด้วยกัน",
-                inst: "แสงสว่างกำลังปรากฏ...",
-                btnText: "ค้นพบแสงสว่าง",
-                sound: () => playDroneSound(261.63, 4, 'sine', 0.5), // C4 clear
-                state: 3
-            },
-            {
-                text: "ในที่สุดความมืดมิดก็จางหายไป<br>และแสงสว่างนำทางพวกเราทุกคน",
-                inst: "การเดินทางร่วมกันเริ่มต้นขึ้นอย่างแท้จริง",
-                btnText: "เริ่มต้นใหม่",
-                sound: () => playUpliftingChord(),
-                state: 4
-            }
-        ];
+        // Draw Player
+        ctx.shadowBlur = 20;
+        ctx.shadowColor = '#fff';
+        ctx.fillStyle = '#fff';
+        ctx.beginPath();
+        ctx.arc(player.x, player.y, player.radius, 0, Math.PI * 2);
+        ctx.fill();
 
-        let currentStep = -1;
+        // Draw Followers & Tethers
+        followers.forEach(f => {
+            // Tether
+            ctx.shadowBlur = 0;
+            ctx.strokeStyle = `rgba(255, 255, 255, ${f.health * 0.3})`;
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(player.x, player.y);
+            ctx.lineTo(f.x, f.y);
+            ctx.stroke();
 
-        function typeWriterEffect(text, element, speed = 50, callback) {
-            element.innerHTML = "";
-            let i = 0;
-            let isTag = false;
-            let textToType = text;
+            // Follower
+            ctx.shadowBlur = 10 * f.health;
+            ctx.shadowColor = '#fff';
+            let c = Math.floor(255 * f.health);
+            ctx.fillStyle = `rgb(${c}, ${c}, ${c})`;
+            ctx.beginPath();
+            ctx.arc(f.x, f.y, f.radius, 0, Math.PI * 2);
+            ctx.fill();
+        });
 
-            function typing() {
-                if (i < textToType.length) {
-                    if (textToType.charAt(i) === '<') isTag = true;
-                    if (textToType.charAt(i) === '>') isTag = false;
-                    
-                    element.innerHTML += textToType.charAt(i);
-                    i++;
-                    
-                    if (isTag) {
-                        typing();
-                    } else {
-                        setTimeout(typing, speed);
-                    }
-                } else if (callback) {
-                    callback();
-                }
-            }
-            typing();
-        }
+        // Draw Enemies (Words)
+        ctx.shadowBlur = 0;
+        ctx.font = '16px Prompt';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        enemies.forEach(e => {
+            if (!e.active) return;
+            ctx.fillStyle = 'rgba(150, 50, 50, 0.8)';
+            ctx.fillText(e.word, e.x, e.y);
+        });
+        
+        ctx.shadowBlur = 0; // Reset
+    }
 
-        function fadeOut(callback) {
-            storyBox.classList.remove('visible');
-            btn.classList.remove('visible');
-            setTimeout(callback, 2000);
-        }
-
-        function advanceStory() {
-            if (currentStep === -1) {
-                initAudio();
-            }
-            
-            currentStep++;
-            if (currentStep >= storyData.length) {
-                currentStep = 0;
-                document.body.classList.remove('light-ending');
-                sceneState = 0;
-                particles.forEach(p => p.reset());
-            }
-
-            const data = storyData[currentStep];
-            sceneState = data.state;
-            
-            if (data.sound) data.sound();
-            if (data.action) data.action();
-
-            if (sceneState === 4) {
-                document.body.classList.add('light-ending');
-            }
-
-            fadeOut(() => {
-                instText.innerText = "";
-                btn.innerText = data.btnText;
-                
-                storyBox.classList.add('visible');
-                typeWriterEffect(data.text, mainText, 40, () => {
-                    setTimeout(() => {
-                        instText.innerText = data.inst;
-                        btn.classList.add('visible');
-                    }, 500);
-                });
-            });
-        }
-
-        function spawnHarshWords() {
-            const words = ["ภาระ", "ทำไมทำไม่ได้?", "สิ้นหวัง", "อ่อนแอ", "ผิดหวังในตัวเธอ"];
-            let count = 0;
-            const interval = setInterval(() => {
-                if (sceneState !== 2 || count > 15) {
-                    clearInterval(interval);
-                    return;
-                }
-                const el = document.createElement('div');
-                el.className = 'harsh-word';
-                el.innerText = words[Math.floor(Math.random() * words.length)];
-                el.style.left = Math.random() * 80 + 10 + '%';
-                el.style.top = Math.random() * 80 + 10 + '%';
-                document.body.appendChild(el);
-                
-                setTimeout(() => { el.style.opacity = 1; }, 10);
-                setTimeout(() => { 
-                    el.style.opacity = 0; 
-                    setTimeout(() => el.remove(), 500);
-                }, 1500);
-                
-                count++;
-            }, 800);
-        }
-
-        btn.addEventListener('click', advanceStory);
-
-        // Initial Reveal
+    startBtn.addEventListener('click', () => {
+        startScreen.style.opacity = 0;
         setTimeout(() => {
-            storyBox.classList.add('visible');
-            btn.classList.add('visible');
+            startScreen.style.display = 'none';
+            initAudio();
+            if(audioCtx.state === 'suspended') audioCtx.resume();
+            isPlaying = true;
+            requestAnimationFrame(loop);
         }, 1000);
+    });
 
-    </script>
+</script>
 </body>
 </html>
+
