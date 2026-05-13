@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Echo of My Paws - เสียงสะท้อนจากปลายเท้า</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@200;300;400&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-color: #050505;
+            --text-color: #d1d1d1;
+            --highlight-color: #ffffff;
+            --button-border: #333333;
+            --button-hover: #1a1a1a;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Kanit', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+            transition: background-color 3s ease;
+        }
+
+        #game-container {
+            width: 80%;
+            max-width: 800px;
+            text-align: center;
+            position: relative;
+        }
+
+        #story-text {
+            font-size: 1.25rem;
+            font-weight: 300;
+            line-height: 1.8;
+            min-height: 150px;
+            margin-bottom: 40px;
+            letter-spacing: 0.5px;
+            opacity: 1;
+            transition: opacity 1s ease;
+        }
+
+        .fade-out {
+            opacity: 0 !important;
+        }
+
+        #choices-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            align-items: center;
+            opacity: 0;
+            transition: opacity 1.5s ease;
+            pointer-events: none; /* ป้องกันการกดก่อนเฟดอินเสร็จ */
+        }
+
+        .show-choices {
+            opacity: 1 !important;
+            pointer-events: auto !important;
+        }
+
+        .choice-btn {
+            background: transparent;
+            color: var(--text-color);
+            border: 1px solid var(--button-border);
+            padding: 12px 30px;
+            font-family: 'Kanit', sans-serif;
+            font-size: 1rem;
+            font-weight: 200;
+            cursor: pointer;
+            width: 100%;
+            max-width: 300px;
+            transition: all 0.4s ease;
+            letter-spacing: 1px;
+        }
+
+        .choice-btn:hover {
+            background: var(--button-hover);
+            color: var(--highlight-color);
+            border-color: #666666;
+            transform: translateY(-2px);
+        }
+
+        .emphasis {
+            color: var(--highlight-color);
+            font-weight: 400;
+        }
+
+        /* เอฟเฟกต์แสงสว่างตอนจบ */
+        .ending-light {
+            background-color: #ececec !important;
+            color: #111111 !important;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="game-container">
+        <div id="story-text"></div>
+        <div id="choices-container"></div>
+    </div>
+
+    <script>
+        const storyNodes = [
+            {
+                id: 0,
+                text: "ทุกอย่างมืดสนิท... แต่ความเจ็บปวดที่เคยกัดกินร่างกายได้หายไปแล้ว",
+                choices: [
+                    { text: "ลืมตาขึ้น", nextNode: 1 }
+                ]
+            },
+            {
+                id: 1,
+                text: "ฉันพยายามขยับตัว ขาทั้งสี่กลับมามีแรงอีกครั้ง ฉันลุกขึ้นยืนในความว่างเปล่าที่หนาวเย็น แต่กลับรู้สึกอบอุ่นอย่างประหลาด ราวกับมีใครบางคนกำลังกอดฉันอยู่",
+                choices: [
+                    { text: "สูดดมกลิ่นรอบตัว", nextNode: 2 }
+                ]
+            },
+            {
+                id: 2,
+                text: "กลิ่น... ฉันได้กลิ่นของคุณ มันเจือจางอยู่ในสายลม ฉันจำภาพสุดท้ายของเราได้ชัดเจน คุณนั่งอยู่ข้างฉันในห้องสี่เหลี่ยมกลิ่นยาฆ่าเชื้อ คุณร้องไห้ น้ำตาของคุณหยดลงบนขนของฉัน",
+                choices: [
+                    { text: "นึกถึงสัมผัสสุดท้าย", nextNode: 3 }
+                ]
+            },
+            {
+                id: 3,
+                text: "ฉันอยากเลียน้ำตาพวกนั้นเหลือเกิน อยากบอกคุณว่าอย่าร้องไห้ แต่ร่างกายของฉันกลับหนักอึ้ง ฉันทำได้เพียงถอนหายใจยาว... จนกระทั่งฉันหลับไป และตื่นขึ้นมาที่นี่",
+                choices: [
+                    { text: "เดินไปข้างหน้า", nextNode: 4 }
+                ]
+            },
+            {
+                id: 4,
+                text: "ที่นี่ไม่มีกาลเวลา ฉันวิ่งเล่นในทุ่งหญ้าสีเทาที่กว้างใหญ่สุดลูกหูลูกตา มีสุนัขตัวอื่นๆ มากมายที่นี่ ทุกตัวดูแข็งแรง วิ่งไล่จับผีเสื้อที่ไม่มีวันเหนื่อย",
+                choices: [
+                    { text: "มองหาคุณ", nextNode: 5 }
+                ]
+            },
+            {
+                id: 5,
+                text: "แต่ลึกๆ แล้ว ฉันยังคงเฝ้ารอ... ฉันมักจะปลีกตัวไปนั่งที่ริมแม่น้ำแห่งความทรงจำ มองข้ามไปยังม่านหมอกฝั่งที่ฉันจากมา หวังว่าวันหนึ่งจะเห็นคุณเดินมาหา พร้อมกับสายจูงเส้นโปรด",
+                choices: [
+                    { text: "จ้องมองลงไปในผิวน้ำ", nextNode: 6 }
+                ]
+            },
+            {
+                id: 6,
+                text: "ภาพในน้ำสะท้อนให้เห็นโลกฝั่งของคุณ... ฉันเห็นคุณยังคงเก็บชามข้าวและที่นอนของฉันไว้ที่เดิม คุณนั่งมองมันในความเงียบ แล้วปล่อยให้น้ำตาไหลริน",
+                choices: [
+                    { text: "พยายามส่งเสียงเห่า", nextNode: 7 },
+                    { text: "ส่งผ่านความรู้สึก", nextNode: 7 }
+                ]
+            },
+            {
+                id: 7,
+                text: "คุณไม่ได้ยินเสียงฉันหรอก ฉันรู้ดี แต่ฉันไม่อยากให้คุณจมอยู่กับความเศร้า ฉันไม่ได้หายไปไหน ฉันแค่เดินทางล่วงหน้ามาวิ่งเล่นรอคุณในที่ที่ไม่มีความเจ็บปวด",
+                choices: [
+                    { text: "บอกลาความเศร้า", nextNode: 8 }
+                ]
+            },
+            {
+                id: 8,
+                text: "อย่าหยุดใช้ชีวิตเพราะไม่มีฉันคอยเดินตามสิคนเก่ง... โลกใบนั้นยังมีที่กว้างๆ ให้คุณออกไปวิ่ง มีลมเย็นๆ ให้คุณได้สูดหายใจ โปรดใช้ชีวิตที่เหลืออยู่ของคุณเผื่อฉันด้วย",
+                choices: [
+                    { text: "ส่งสายลมไปกอดคุณ", nextNode: 9 }
+                ]
+            },
+            {
+                id: 9,
+                text: "ฉันจะรอคุณอยู่ที่นี่เสมอ ไม่ว่าจะอีกกี่สิบปีก็ตาม เรามีเวลาเป็นนิรันดร์ที่จะได้กลับมาเล่นโยนลูกบอลด้วยกันอีกครั้ง...",
+                choices: [
+                    { text: "จงมีชีวิตต่อไป...", nextNode: 10 }
+                ]
+            },
+            {
+                id: 10,
+                text: "ขอให้รอยยิ้มของคุณกลับมาสดใสเหมือนวันแรกที่เราพบกัน รักและคิดถึงเสมอ... จากเพื่อนตัวน้อยของคุณ.",
+                choices: [] // จบเกม
+            }
+        ];
+
+        let typeSpeed = 50; // ความเร็วในการพิมพ์ข้อความ (ms)
+        let isTyping = false;
+
+        const storyTextElement = document.getElementById('story-text');
+        const choicesContainer = document.getElementById('choices-container');
+
+        function startGame() {
+            showNode(0);
+        }
+
+        function showNode(nodeIndex) {
+            const node = storyNodes.find(n => n.id === nodeIndex);
+            
+            // ซ่อนปุ่มก่อน
+            choicesContainer.classList.remove('show-choices');
+            choicesContainer.innerHTML = '';
+            
+            // เฟดข้อความเก่าออก
+            storyTextElement.classList.add('fade-out');
+
+            setTimeout(() => {
+                storyTextElement.innerHTML = '';
+                storyTextElement.classList.remove('fade-out');
+                
+                if (nodeIndex === 10) {
+                    // เปลี่ยนตีมสีเมื่อถึงตอนจบเพื่อสื่อถึงการก้าวผ่าน
+                    document.body.classList.add('ending-light');
+                }
+
+                typeWriter(node.text, 0, () => {
+                    // เมื่อพิมพ์จบ ค่อยแสดงปุ่ม
+                    if (node.choices.length > 0) {
+                        node.choices.forEach(choice => {
+                            const button = document.createElement('button');
+                            button.innerText = choice.text;
+                            button.classList.add('choice-btn');
+                            button.onclick = () => showNode(choice.nextNode);
+                            choicesContainer.appendChild(button);
+                        });
+                        choicesContainer.classList.add('show-choices');
+                    } else {
+                        // หน้าจบ
+                        const endText = document.createElement('p');
+                        endText.style.fontSize = "0.9rem";
+                        endText.style.marginTop = "50px";
+                        endText.style.color = "#666";
+                        endText.innerText = "The End.";
+                        choicesContainer.appendChild(endText);
+                        choicesContainer.classList.add('show-choices');
+                    }
+                });
+            }, 1000); // รอให้ fade out เสร็จ
+        }
+
+        function typeWriter(text, index, callback) {
+            isTyping = true;
+            if (index < text.length) {
+                // จัดการกับจังหวะเว้นวรรคยาวๆ (ellipsis)
+                let currentSpeed = typeSpeed;
+                if (text.charAt(index) === '.' || text.charAt(index) === ',') {
+                    currentSpeed = typeSpeed * 5; // หยุดพักนิดหน่อยตรงจุด
+                }
+
+                storyTextElement.innerHTML += text.charAt(index);
+                setTimeout(() => typeWriter(text, index + 1, callback), currentSpeed);
+            } else {
+                isTyping = false;
+                callback();
+            }
+        }
+
+        // เริ่มเกมเมื่อโหลดหน้าเว็บเสร็จ
+        window.onload = startGame;
+    </script>
+</body>
+</html>
