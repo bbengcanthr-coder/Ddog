@@ -2,10 +2,11 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>The Weight We Carry</title>
-    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@200;400;600&display=swap" rel="stylesheet">
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;600&display=swap');
+
         * {
             margin: 0;
             padding: 0;
@@ -17,20 +18,20 @@
             height: 100%;
             background-color: #030303;
             color: #ffffff;
-            font-family: 'Sarabun', sans-serif;
+            font-family: 'Prompt', sans-serif;
             overflow: hidden;
             user-select: none;
-            -webkit-user-select: none;
+            transition: background-color 3s ease;
         }
 
-        canvas {
-            display: block;
-            width: 100%;
-            height: 100%;
+        #gameCanvas {
             position: absolute;
             top: 0;
             left: 0;
+            width: 100%;
+            height: 100%;
             z-index: 1;
+            pointer-events: none;
         }
 
         #ui-layer {
@@ -44,18 +45,15 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            pointer-events: none;
+            text-align: center;
+            padding: 20px;
         }
 
         .text-container {
-            width: 80%;
             max-width: 800px;
-            text-align: center;
             opacity: 0;
             transform: translateY(20px);
             transition: opacity 2s ease, transform 2s ease;
-            text-shadow: 0px 0px 15px rgba(255, 255, 255, 0.3);
-            pointer-events: none;
         }
 
         .text-container.visible {
@@ -64,177 +62,129 @@
         }
 
         h1 {
-            font-weight: 200;
-            font-size: clamp(1.5rem, 3vw, 2.5rem);
-            line-height: 1.8;
+            font-size: 2rem;
+            font-weight: 400;
+            line-height: 1.6;
             letter-spacing: 1px;
+            margin-bottom: 30px;
+            text-shadow: 0 0 10px rgba(0,0,0,0.8);
         }
 
-        .btn-start {
-            pointer-events: auto;
+        .sub-text {
+            font-size: 1.2rem;
+            font-weight: 300;
+            color: #aaaaaa;
+            margin-top: 20px;
+        }
+
+        .harsh-word {
+            position: absolute;
+            color: rgba(255, 50, 50, 0.7);
+            font-weight: 600;
+            font-size: 1.5rem;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            text-shadow: 0 0 5px rgba(255, 0, 0, 0.5);
+        }
+
+        .btn {
             margin-top: 40px;
             padding: 12px 30px;
+            border: 1px solid #ffffff;
             background: transparent;
-            border: 1px solid rgba(255, 255, 255, 0.5);
-            color: #fff;
-            font-family: 'Sarabun', sans-serif;
-            font-size: 1.2rem;
-            font-weight: 400;
+            color: #ffffff;
+            font-family: 'Prompt', sans-serif;
+            font-size: 1rem;
             cursor: pointer;
-            transition: all 0.4s ease;
-            border-radius: 4px;
             letter-spacing: 2px;
-        }
-
-        .btn-start:hover {
-            background: rgba(255, 255, 255, 1);
-            color: #000;
-            box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
-        }
-
-        #interaction-hint {
-            position: absolute;
-            bottom: 40px;
-            font-size: 0.9rem;
-            font-weight: 200;
-            color: rgba(255, 255, 255, 0.4);
-            opacity: 0;
-            transition: opacity 1s ease;
-            letter-spacing: 1px;
-        }
-
-        .fade-to-white {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: #ffffff;
-            z-index: 10;
+            transition: all 0.3s ease;
             opacity: 0;
             pointer-events: none;
-            transition: opacity 5s ease-in-out;
         }
 
-        .final-text {
-            color: #000;
+        .btn.visible {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .btn:hover {
+            background: #ffffff;
+            color: #000000;
+            box-shadow: 0 0 15px rgba(255,255,255,0.5);
+        }
+
+        /* Ending Transition */
+        body.light-ending {
+            background-color: #ffffff;
+            color: #000000;
+        }
+
+        body.light-ending h1 {
             text-shadow: none;
             font-weight: 600;
+            color: #222222;
+        }
+
+        body.light-ending .btn {
+            border-color: #000000;
+            color: #000000;
+        }
+
+        body.light-ending .btn:hover {
+            background: #000000;
+            color: #ffffff;
         }
     </style>
 </head>
 <body>
 
     <canvas id="gameCanvas"></canvas>
-    
+
     <div id="ui-layer">
-        <div id="story-text" class="text-container">
-            <h1 id="text-content"></h1>
-            <button id="start-btn" class="btn-start">เริ่มต้นการเดินทาง</button>
+        <div class="text-container" id="story-box">
+            <h1 id="main-text"></h1>
+            <p class="sub-text" id="instruction-text"></p>
+            <button class="btn" id="action-btn">เริ่มต้นการเดินทาง</button>
         </div>
-        <div id="interaction-hint"></div>
     </div>
 
-    <div id="white-screen" class="fade-to-white"></div>
-
     <script>
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
-        const textContent = document.getElementById('text-content');
-        const textContainer = document.getElementById('story-text');
-        const startBtn = document.getElementById('start-btn');
-        const interactionHint = document.getElementById('interaction-hint');
-        const whiteScreen = document.getElementById('white-screen');
-
-        let width, height;
-        let animationId;
-        let phase = 'start';
-        
-        let mouse = { x: 0, y: 0, isDown: false, radius: 50 };
-        
-        // Audio Context (Web Audio API)
-        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        // --- Web Audio API Setup (Synthesized Sounds) ---
         let audioCtx;
-        let ambientOscillator;
-        let ambientGain;
+        const masterGain = 0.3;
 
-        const storyNodes = [
-            { text: "ฉันแบกรับบางสิ่งบางอย่างไว้มากมาย...", phaseType: 'burden', hint: "คลิกค้างไว้และพยายามลากขึ้นไป" },
-            { text: "มีหลายคนคาดหวังในตัวฉัน... จนฉันไม่รู้ว่าจะทำอย่างไรดี", phaseType: 'burden', hint: "แรงโน้มถ่วงกำลังดึงมันลงมา" },
-            { text: "ทำไมกลุ่มคนบางคนถึงเอาแต่ด่าว่า ตัดพ้อ และสิ้นหวังในตัวฉัน...", phaseType: 'attack', hint: "ขยับเมาส์เพื่อปัดเป่าคำพูดเหล่านั้น" },
-            { text: "ในบางครั้งฉันรู้สึกเจ็บปวด... และมีน้ำตา", phaseType: 'attack', hint: "ปกป้องความรู้สึกของคุณ" },
-            { text: "แต่ถึงอย่างนั้น... ฉันก็ไม่อยากทิ้งใครไว้ข้างหลังเลย", phaseType: 'scatter', hint: "ทุกอย่างกำลังแตกสลาย" },
-            { text: "เราทุกคนจะต้องก้าวเดินไปด้วยกัน...", phaseType: 'gather', hint: "กวาดเมาส์เพื่อรวบรวมพวกเขาให้กลับมา" },
-            { text: "ไปถึงจุดหมายปลายทางของเรา", phaseType: 'gather', hint: "ดึงพวกเขาเข้ามาใกล้ๆ" },
-            { text: "และในที่สุด...", phaseType: 'light', hint: "" },
-            { text: "แสงสว่างจะคอยนำทางเราเสมอ", phaseType: 'end', hint: "" }
-        ];
-
-        let currentNode = 0;
-        let gameObjects = [];
-        let particles = [];
-        
-        // Resize Handler
-        function resize() {
-            width = canvas.width = window.innerWidth;
-            height = canvas.height = window.innerHeight;
-            mouse.x = width / 2;
-            mouse.y = height / 2;
-        }
-        window.addEventListener('resize', resize);
-        resize();
-
-        // Input Listeners
-        window.addEventListener('mousemove', (e) => {
-            mouse.x = e.clientX;
-            mouse.y = e.clientY;
-        });
-        window.addEventListener('mousedown', () => mouse.isDown = true);
-        window.addEventListener('mouseup', () => mouse.isDown = false);
-        window.addEventListener('touchstart', (e) => {
-            mouse.x = e.touches[0].clientX;
-            mouse.y = e.touches[0].clientY;
-            mouse.isDown = true;
-        });
-        window.addEventListener('touchend', () => mouse.isDown = false);
-        window.addEventListener('touchmove', (e) => {
-            mouse.x = e.touches[0].clientX;
-            mouse.y = e.touches[0].clientY;
-        });
-
-        // Audio System Initialization
         function initAudio() {
             if (!audioCtx) {
-                audioCtx = new AudioContext();
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             }
             if (audioCtx.state === 'suspended') {
                 audioCtx.resume();
             }
         }
 
-        function playAmbientDrone() {
+        function playDroneSound(frequency, duration, type = 'sine', volume = 0.5) {
             if (!audioCtx) return;
-            if (ambientOscillator) {
-                ambientGain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 1);
-                ambientOscillator.stop(audioCtx.currentTime + 1);
-            }
-            ambientOscillator = audioCtx.createOscillator();
-            ambientGain = audioCtx.createGain();
+            const osc = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
             
-            ambientOscillator.type = 'sine';
-            ambientOscillator.frequency.setValueAtTime(45, audioCtx.currentTime); // Deep hum
+            osc.type = type;
+            osc.frequency.setValueAtTime(frequency, audioCtx.currentTime);
             
-            ambientGain.gain.setValueAtTime(0, audioCtx.currentTime);
-            ambientGain.gain.linearRampToValueAtTime(0.3, audioCtx.currentTime + 3);
+            gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
+            gainNode.gain.linearRampToValueAtTime(volume * masterGain, audioCtx.currentTime + 1);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
             
-            ambientOscillator.connect(ambientGain);
-            ambientGain.connect(audioCtx.destination);
-            ambientOscillator.start();
+            osc.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            
+            osc.start();
+            osc.stop(audioCtx.currentTime + duration);
         }
 
-        function playGlassShatter() {
+        function playNoise(duration) {
             if (!audioCtx) return;
-            const bufferSize = audioCtx.sampleRate * 0.15;
+            const bufferSize = audioCtx.sampleRate * duration;
             const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
             const data = buffer.getChannelData(0);
             for (let i = 0; i < bufferSize; i++) {
@@ -245,373 +195,275 @@
             noise.buffer = buffer;
             
             const filter = audioCtx.createBiquadFilter();
-            filter.type = 'highpass';
-            filter.frequency.value = 2000;
-            
-            const gain = audioCtx.createGain();
-            gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
-            
+            filter.type = 'lowpass';
+            filter.frequency.value = 400;
+
+            const gainNode = audioCtx.createGain();
+            gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
+            gainNode.gain.linearRampToValueAtTime(0.1, audioCtx.currentTime + 0.5);
+            gainNode.gain.linearRampToValueAtTime(0, audioCtx.currentTime + duration);
+
             noise.connect(filter);
-            filter.connect(gain);
-            gain.connect(audioCtx.destination);
+            filter.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            
             noise.start();
         }
 
-        function playChime(frequency, delay = 0) {
+        function playUpliftingChord() {
             if (!audioCtx) return;
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            
-            osc.type = 'sine';
-            osc.frequency.setValueAtTime(frequency, audioCtx.currentTime + delay);
-            
-            gain.gain.setValueAtTime(0, audioCtx.currentTime + delay);
-            gain.gain.linearRampToValueAtTime(0.15, audioCtx.currentTime + delay + 0.1);
-            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + delay + 4);
-            
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-            osc.start(audioCtx.currentTime + delay);
-            osc.stop(audioCtx.currentTime + delay + 4);
-        }
-
-        function playEndingMusic() {
-            if (ambientOscillator) {
-                ambientGain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 2);
-            }
-            // A major chord sequence for hope
-            const notes = [440, 554.37, 659.25, 880]; 
-            notes.forEach((freq, index) => {
-                playChime(freq, index * 0.5);
-                playChime(freq * 2, index * 0.5 + 2); // octave higher
+            const frequencies = [261.63, 329.63, 392.00, 523.25]; // C Major Chord
+            frequencies.forEach((freq, index) => {
+                setTimeout(() => {
+                    playDroneSound(freq, 5, 'triangle', 0.2);
+                }, index * 200);
             });
-            setTimeout(() => {
-                 notes.forEach((freq, index) => {
-                    playChime(freq, index * 0.3);
-                });
-            }, 4000);
         }
 
-        // Classes for Game Entities
-        class Burden {
-            constructor() {
-                this.x = width / 2;
-                this.y = height - 100;
-                this.radius = 60;
-                this.vy = 0;
-                this.gravity = 0.2;
-                this.dragForce = 0.5;
-            }
+        // --- Canvas Particle System ---
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        let width, height;
+        let particles = [];
+        let sceneState = 0;
+        let targetX = 0;
+        let targetY = 0;
 
-            update() {
-                if (mouse.isDown) {
-                    const dx = mouse.x - this.x;
-                    const dy = mouse.y - this.y;
-                    const dist = Math.sqrt(dx * dx + dy * dy);
-                    
-                    if (dist < this.radius + 50) {
-                        this.vy -= this.dragForce; 
-                        this.x += dx * 0.05; // slight horizontal follow
-                    }
-                }
-
-                this.vy += this.gravity;
-                this.y += this.vy;
-                this.vy *= 0.9; // friction
-
-                if (this.y > height - this.radius) {
-                    this.y = height - this.radius;
-                    this.vy = 0;
-                }
-                if (this.y < this.radius) {
-                    this.y = this.radius;
-                    this.vy = 0;
-                }
-                
-                // Return to center horizontally slowly
-                this.x += (width/2 - this.x) * 0.02;
-            }
-
-            draw() {
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-                ctx.fillStyle = 'rgba(40, 40, 40, 0.8)';
-                ctx.fill();
-                ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
-                ctx.lineWidth = 2;
-                ctx.stroke();
-
-                // Inner core
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.radius * 0.6 + Math.sin(Date.now() * 0.002) * 5, 0, Math.PI * 2);
-                ctx.fillStyle = 'rgba(80, 80, 80, 0.5)';
-                ctx.fill();
-            }
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+            targetX = width / 2;
+            targetY = height / 2;
         }
+        window.addEventListener('resize', resize);
+        resize();
 
-        class Attack {
+        class Particle {
             constructor() {
-                this.x = Math.random() < 0.5 ? -50 : width + 50;
+                this.reset();
+            }
+            reset() {
+                this.x = Math.random() * width;
                 this.y = Math.random() * height;
-                this.targetX = width / 2 + (Math.random() * 200 - 100);
-                this.targetY = height / 2 + (Math.random() * 200 - 100);
-                
-                const angle = Math.atan2(this.targetY - this.y, this.targetX - this.x);
-                const speed = 3 + Math.random() * 4;
-                
-                this.vx = Math.cos(angle) * speed;
-                this.vy = Math.sin(angle) * speed;
-                
-                this.length = 40 + Math.random() * 60;
-                this.active = true;
-                this.color = `rgba(255, 255, 255, ${0.4 + Math.random() * 0.4})`;
+                this.size = Math.random() * 2 + 0.5;
+                this.speedX = Math.random() * 1 - 0.5;
+                this.speedY = Math.random() * 1 - 0.5;
+                this.color = 'rgba(255, 255, 255, 0.5)';
+                this.life = Math.random();
             }
-
-            update() {
-                this.x += this.vx;
-                this.y += this.vy;
-
-                // Collision with mouse defense
-                const dx = mouse.x - this.x;
-                const dy = mouse.y - this.y;
-                const dist = Math.sqrt(dx * dx + dy * dy);
-
-                if (dist < mouse.radius + 20) {
-                    this.active = false;
-                    playGlassShatter();
-                    createParticles(this.x, this.y, 5, 'shard');
-                }
-
-                if (this.x < -100 || this.x > width + 100 || this.y < -100 || this.y > height + 100) {
-                    this.active = false;
+            update(state) {
+                if (state === 1) {
+                    // Heavy burden: Particles move slowly downwards
+                    this.y += 0.5;
+                    this.speedX *= 0.99;
+                    if (this.y > height) this.y = 0;
+                } else if (state === 2) {
+                    // Chaos/Harsh words: Fast, erratic movement
+                    this.x += (Math.random() - 0.5) * 5;
+                    this.y += (Math.random() - 0.5) * 5;
+                } else if (state === 3) {
+                    // Gathering/Holding on: Particles pull towards center
+                    const dx = targetX - this.x;
+                    const dy = targetY - this.y;
+                    this.x += dx * 0.01;
+                    this.y += dy * 0.01;
+                } else if (state === 4) {
+                    // Light expanding: Particles move outwards and fade
+                    const dx = this.x - targetX;
+                    const dy = this.y - targetY;
+                    this.x += dx * 0.02;
+                    this.y += dy * 0.02;
+                    this.size += 0.05;
+                } else {
+                    this.x += this.speedX;
+                    this.y += this.speedY;
+                    if (this.x < 0 || this.x > width) this.speedX *= -1;
+                    if (this.y < 0 || this.y > height) this.speedY *= -1;
                 }
             }
-
-            draw() {
+            draw(state) {
                 ctx.beginPath();
-                ctx.moveTo(this.x, this.y);
-                ctx.lineTo(this.x - this.vx * 3, this.y - this.vy * 3);
-                ctx.strokeStyle = this.color;
-                ctx.lineWidth = 2;
-                ctx.stroke();
-            }
-        }
-
-        class CompanionParticle {
-            constructor(x, y) {
-                this.x = x;
-                this.y = y;
-                this.vx = (Math.random() - 0.5) * 10;
-                this.vy = (Math.random() - 0.5) * 10;
-                this.radius = 2 + Math.random() * 3;
-                this.color = 'rgba(200, 200, 200, 0.8)';
-                this.gathered = false;
-            }
-
-            update(phaseType) {
-                if (phaseType === 'scatter') {
-                    this.vx *= 0.98;
-                    this.vy *= 0.98;
-                    // Drift
-                    this.vx += (Math.random() - 0.5) * 0.2;
-                    this.vy += (Math.random() - 0.5) * 0.2;
-                } else if (phaseType === 'gather') {
-                    const dx = mouse.x - this.x;
-                    const dy = mouse.y - this.y;
-                    const dist = Math.sqrt(dx * dx + dy * dy);
-                    
-                    if (dist < 300) {
-                        this.vx += dx * 0.001;
-                        this.vy += dy * 0.001;
-                    }
-                    
-                    this.vx *= 0.95;
-                    this.vy *= 0.95;
-
-                    if (dist < 50) this.gathered = true;
-                    else this.gathered = false;
-                } else if (phaseType === 'light' || phaseType === 'end') {
-                    const dx = (width/2) - this.x;
-                    const dy = (height/2) - this.y;
-                    this.vx += dx * 0.01;
-                    this.vy += dy * 0.01;
-                    this.vx *= 0.9;
-                    this.vy *= 0.9;
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                if (state === 2) {
+                    ctx.fillStyle = Math.random() > 0.9 ? 'rgba(255, 50, 50, 0.8)' : 'rgba(200, 200, 200, 0.5)';
+                } else if (state === 4) {
+                    ctx.fillStyle = 'rgba(255, 215, 0, 0.6)'; // Soft gold
+                } else {
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
                 }
-
-                this.x += this.vx;
-                this.y += this.vy;
-
-                // Bounce off walls
-                if (this.x < 0 || this.x > width) this.vx *= -1;
-                if (this.y < 0 || this.y > height) this.vy *= -1;
-            }
-
-            draw() {
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-                ctx.fillStyle = this.gathered ? 'rgba(255, 255, 255, 1)' : this.color;
                 ctx.fill();
-                if (this.gathered) {
-                    ctx.shadowBlur = 10;
-                    ctx.shadowColor = '#fff';
-                    ctx.fill();
-                    ctx.shadowBlur = 0;
-                }
             }
         }
 
-        class VisualParticle {
-            constructor(x, y, type) {
-                this.x = x;
-                this.y = y;
-                this.type = type;
-                this.vx = (Math.random() - 0.5) * 8;
-                this.vy = (Math.random() - 0.5) * 8;
-                this.life = 1;
-                this.decay = 0.02 + Math.random() * 0.03;
-            }
-            update() {
-                this.x += this.vx;
-                this.y += this.vy;
-                this.life -= this.decay;
-            }
-            draw() {
-                ctx.globalAlpha = Math.max(0, this.life);
-                ctx.fillStyle = '#ffffff';
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, 1.5, 0, Math.PI*2);
-                ctx.fill();
-                ctx.globalAlpha = 1;
-            }
+        for (let i = 0; i < 150; i++) {
+            particles.push(new Particle());
         }
 
-        function createParticles(x, y, count, type) {
-            for (let i = 0; i < count; i++) {
-                particles.push(new VisualParticle(x, y, type));
-            }
-        }
-
-        let mainBurden = new Burden();
-        let attacks = [];
-        let companions = [];
-        
-        function progressStory() {
-            textContainer.classList.remove('visible');
-            interactionHint.style.opacity = 0;
-            
-            setTimeout(() => {
-                currentNode++;
-                if (currentNode < storyNodes.length) {
-                    setupPhase(storyNodes[currentNode]);
-                }
-            }, 2000);
-        }
-
-        function setupPhase(node) {
-            phase = node.phaseType;
-            textContent.innerText = node.text;
-            interactionHint.innerText = node.hint;
-            
-            if (phase === 'burden') {
-                if (currentNode === 0) playAmbientDrone();
-            } 
-            else if (phase === 'scatter') {
-                // Break burden into companions
-                for(let i=0; i<60; i++) {
-                    companions.push(new CompanionParticle(mainBurden.x, mainBurden.y));
-                }
-                mainBurden = null;
-                playGlassShatter();
-            }
-            else if (phase === 'light') {
-                playEndingMusic();
-                whiteScreen.style.opacity = 1;
-                textContainer.style.zIndex = 20;
-                textContent.classList.add('final-text');
-            }
-
-            textContainer.classList.add('visible');
-            if (node.hint) {
-                setTimeout(() => { interactionHint.style.opacity = 0.6; }, 1000);
-            }
-
-            // Auto progression logic based on phase completion or time
-            if (phase === 'burden') {
-                setTimeout(progressStory, 7000);
-            } else if (phase === 'attack') {
-                setTimeout(progressStory, 8000);
-            } else if (phase === 'scatter') {
-                setTimeout(progressStory, 6000);
-            } else if (phase === 'gather') {
-                setTimeout(progressStory, 7000);
-            } else if (phase === 'light') {
-                setTimeout(progressStory, 5000);
-            }
-        }
-
-        // Main Game Loop
         function animate() {
-            // Trail effect background
-            ctx.fillStyle = phase === 'light' || phase === 'end' ? 'rgba(255, 255, 255, 0.2)' : 'rgba(3, 3, 3, 0.3)';
-            ctx.fillRect(0, 0, width, height);
-
-            if (phase === 'burden' && mainBurden) {
-                mainBurden.update();
-                mainBurden.draw();
-            }
-
-            if (phase === 'attack') {
-                if (Math.random() < 0.1) attacks.push(new Attack());
-                
-                // Draw defensive aura around mouse
-                ctx.beginPath();
-                ctx.arc(mouse.x, mouse.y, mouse.radius, 0, Math.PI*2);
-                ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
-                ctx.stroke();
-                
+            if (sceneState === 4) {
                 ctx.fillStyle = 'rgba(255, 255, 255, 0.05)';
-                ctx.fill();
-
-                attacks.forEach(a => {
-                    a.update();
-                    a.draw();
-                });
-                attacks = attacks.filter(a => a.active);
+            } else {
+                ctx.fillStyle = 'rgba(3, 3, 3, 0.2)';
             }
-
-            if (phase === 'scatter' || phase === 'gather' || phase === 'light' || phase === 'end') {
-                if (phase === 'gather') {
-                    // Draw magnetic pull
-                    ctx.beginPath();
-                    ctx.arc(mouse.x, mouse.y, 300, 0, Math.PI*2);
-                    ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
-                    ctx.stroke();
-                }
-
-                companions.forEach(c => {
-                    c.update(phase);
-                    c.draw();
-                });
-            }
-
-            // Visual particles (shards etc)
+            ctx.fillRect(0, 0, width, height);
+            
             particles.forEach(p => {
-                p.update();
-                p.draw();
+                p.update(sceneState);
+                p.draw(sceneState);
             });
-            particles = particles.filter(p => p.life > 0);
+            
+            requestAnimationFrame(animate);
+        }
+        animate();
 
-            animationId = requestAnimationFrame(animate);
+        // --- Story Progression Logic ---
+        const storyBox = document.getElementById('story-box');
+        const mainText = document.getElementById('main-text');
+        const instText = document.getElementById('instruction-text');
+        const btn = document.getElementById('action-btn');
+
+        const storyData = [
+            {
+                text: "มีบางสิ่ง... ที่ฉันแบกรับไว้มากมาย",
+                inst: "คลิกหน้าจอเพื่อก้าวเดินต่อไป",
+                btnText: "ก้าวต่อไป",
+                sound: () => playDroneSound(65.41, 4, 'sine', 0.8), // C2 heavy
+                state: 1
+            },
+            {
+                text: "เสียงวิจารณ์ ความคาดหวัง และความผิดหวังของใครหลายคน<br>ทำไมพวกเขาถึงตัดพ้อในตัวฉัน?",
+                inst: "ความเจ็บปวดก่อตัวขึ้น...",
+                btnText: "อดทนไว้",
+                sound: () => playDroneSound(130.81, 3, 'sawtooth', 0.4), // C3 harsh
+                state: 2,
+                action: spawnHarshWords
+            },
+            {
+                text: "ฉันเจ็บปวด ฉันมีน้ำตา<br>แต่ฉันก็รู้ว่าจุดหมายปลายทางของเราคือสิ่งสำคัญ",
+                inst: "รวบรวมทุกคนเข้าด้วยกัน",
+                btnText: "จับมือไว้",
+                sound: () => playNoise(4), // Rain/Wind noise
+                state: 3
+            },
+            {
+                text: "ฉันจะไม่ทิ้งใครไว้ข้างหลัง<br>เราทุกคนจะต้องก้าวเดินไปด้วยกัน",
+                inst: "แสงสว่างกำลังปรากฏ...",
+                btnText: "ค้นพบแสงสว่าง",
+                sound: () => playDroneSound(261.63, 4, 'sine', 0.5), // C4 clear
+                state: 3
+            },
+            {
+                text: "ในที่สุดความมืดมิดก็จางหายไป<br>และแสงสว่างนำทางพวกเราทุกคน",
+                inst: "การเดินทางร่วมกันเริ่มต้นขึ้นอย่างแท้จริง",
+                btnText: "เริ่มต้นใหม่",
+                sound: () => playUpliftingChord(),
+                state: 4
+            }
+        ];
+
+        let currentStep = -1;
+
+        function typeWriterEffect(text, element, speed = 50, callback) {
+            element.innerHTML = "";
+            let i = 0;
+            let isTag = false;
+            let textToType = text;
+
+            function typing() {
+                if (i < textToType.length) {
+                    if (textToType.charAt(i) === '<') isTag = true;
+                    if (textToType.charAt(i) === '>') isTag = false;
+                    
+                    element.innerHTML += textToType.charAt(i);
+                    i++;
+                    
+                    if (isTag) {
+                        typing();
+                    } else {
+                        setTimeout(typing, speed);
+                    }
+                } else if (callback) {
+                    callback();
+                }
+            }
+            typing();
         }
 
-        startBtn.addEventListener('click', () => {
-            initAudio();
-            startBtn.style.display = 'none';
-            setupPhase(storyNodes[currentNode]);
-            animate();
-        });
+        function fadeOut(callback) {
+            storyBox.classList.remove('visible');
+            btn.classList.remove('visible');
+            setTimeout(callback, 2000);
+        }
+
+        function advanceStory() {
+            if (currentStep === -1) {
+                initAudio();
+            }
+            
+            currentStep++;
+            if (currentStep >= storyData.length) {
+                currentStep = 0;
+                document.body.classList.remove('light-ending');
+                sceneState = 0;
+                particles.forEach(p => p.reset());
+            }
+
+            const data = storyData[currentStep];
+            sceneState = data.state;
+            
+            if (data.sound) data.sound();
+            if (data.action) data.action();
+
+            if (sceneState === 4) {
+                document.body.classList.add('light-ending');
+            }
+
+            fadeOut(() => {
+                instText.innerText = "";
+                btn.innerText = data.btnText;
+                
+                storyBox.classList.add('visible');
+                typeWriterEffect(data.text, mainText, 40, () => {
+                    setTimeout(() => {
+                        instText.innerText = data.inst;
+                        btn.classList.add('visible');
+                    }, 500);
+                });
+            });
+        }
+
+        function spawnHarshWords() {
+            const words = ["ภาระ", "ทำไมทำไม่ได้?", "สิ้นหวัง", "อ่อนแอ", "ผิดหวังในตัวเธอ"];
+            let count = 0;
+            const interval = setInterval(() => {
+                if (sceneState !== 2 || count > 15) {
+                    clearInterval(interval);
+                    return;
+                }
+                const el = document.createElement('div');
+                el.className = 'harsh-word';
+                el.innerText = words[Math.floor(Math.random() * words.length)];
+                el.style.left = Math.random() * 80 + 10 + '%';
+                el.style.top = Math.random() * 80 + 10 + '%';
+                document.body.appendChild(el);
+                
+                setTimeout(() => { el.style.opacity = 1; }, 10);
+                setTimeout(() => { 
+                    el.style.opacity = 0; 
+                    setTimeout(() => el.remove(), 500);
+                }, 1500);
+                
+                count++;
+            }, 800);
+        }
+
+        btn.addEventListener('click', advanceStory);
+
+        // Initial Reveal
+        setTimeout(() => {
+            storyBox.classList.add('visible');
+            btn.classList.add('visible');
+        }, 1000);
 
     </script>
 </body>
